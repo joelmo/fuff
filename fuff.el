@@ -1,9 +1,9 @@
-;;; fu-find-file.el --- Find files with findutils.
+;;; fuff.el --- Find files with findutils.
 
 ;; Copyright (C) 2017  Joel Moberg
 
 ;; Author: Joel Moberg
-;; Git: https://github.com/joelmo/fu-find-file.git
+;; Git: https://github.com/joelmo/fuff.git
 ;; Version: 0.1
 ;; Keywords: files, project, convenience
 
@@ -25,11 +25,14 @@
 ;;; Commentary:
 
 ;; This library extends `find-file' by listing files recursively if
-;; any directory specified by `ffip-start-directories' is
-;; entered. This library depends on find from findutils. Call
+;; any directory specified by `fuff-start-directories' is
+;; entered.  This library depends on find from findutils.  Call
 ;; `customize-group' fuff for more.
 
 ;;; Code:
+
+(require 'seq)
+(require 'ido)
 
 (defgroup fuff nil
   "Switch between files using findutils find."
@@ -40,20 +43,20 @@
 (defcustom fuff-patterns '("*.adb" "*.c" "*.cpp" "*.cs" "*.el" "*.go"
 "*.html" "*.java" "*.js" "*.md" "*.nix" "*.org" "*.php" "*.pl" "*.py"
 "*.r" "*.rb" "*.rs" "*.sh" "*.sql" "*.txt")
-  "List with patterns to look for when using `fu-find-file'. This is
-used by `fuff-query'."
+  "List of patterns to look for when using `fuff-find-file'.
+This is used by `fuff-query'."
   :type '(repeat (string :tag "Pattern")))
 
 (defcustom fuff-start-directories '("~/Documents")
-  "Indicators telling where `fu-find-file' can be used. The command
-will be enabled if any entry here is a prefix for `default-directory',
-or `ido-current-directory' if the ido hook is enabled
-(`fuff-ido-switch'). Also see `fuff-start-directory'."
+  "Indicators telling where `fuff-find-file' can be used.
+The command will be enabled if any entry here is a prefix for
+`default-directory', or `ido-current-directory' if the ido hook is
+enabled (`fuff-ido-switch').  Also see `fuff-start-directory'."
   :type '(repeat directory))
 
 (defun fuff-start-directory (file)
-  "Return nil or a starting point directory from where files can
-be discovered."
+  "Return a starting point directory or nil if not possible.
+Argument FILE is a file or directory above the starting point."
   (let ((file (expand-file-name file)))
       (seq-some (lambda (start-dir)
 	      (when (string-match start-dir file) start-dir))
@@ -70,31 +73,33 @@ be discovered."
 		 (format "find %s -type f \\( %s \\) -printf '%%P\n'"
 			 dir (fuff-query)))))
 
+(defvar fuff-enable-ido-switch nil
+  "If non-nil, enable `fuff-ido-switch' in ido.")
+
 (defun fuff-internal (dir)
-   (setq fuff-enable-ido-switch t)
+  "Internal command for `fuff-find-file'.
+Files will be listed recursively from DIR."
+  (setq fuff-enable-ido-switch t)
   (let ((selected (ido-completing-read "Find file (fu): " (fuff-files dir))))
     (if (file-exists-p selected)
-	(ido-file-internal ido-default-file-method 'fu-find-file selected)
+	(ido-file-internal ido-default-file-method 'fuff-find-file selected)
       (find-file (concat dir "/" selected)))))
 
 (defun fuff-ido-switch ()
-  "Switch to using `fu-find-file' if a start directory can be
-entered."
+  "Switch to `fuff-find-file' if a start directory can be entered."
   (let ((dir (fuff-start-directory ido-current-directory)))
     (if dir
     	(fuff-internal dir))))
 
-(defvar fuff-enable-ido-switch nil
-  "If non-nil, enable `fuff-ido-switch' in ido.")
-
 (defun fuff-ido-setup ()
+  "Hook for ido, determines when to switch to fuff."
   (if fuff-enable-ido-switch
-      (add-hook 'ido-make-file-list-hook 'fuff-ido-switch)    
+      (add-hook 'ido-make-file-list-hook 'fuff-ido-switch)
     (remove-hook 'ido-make-file-list-hook 'fuff-ido-switch))
   (setq fuff-enable-ido-switch nil))
 
 ;;;###autoload
-(defun fu-find-file ()
+(defun fuff-find-file ()
   "This can be used as a replacement for `find-file'."
   (interactive)
   (let ((start-dir (fuff-start-directory default-directory)))
@@ -105,5 +110,5 @@ entered."
 ;;;###autoload
 (add-hook 'ido-setup-hook 'fuff-ido-setup)
 
-(provide 'fu-find-file)
-;;; fu-find-file.el ends here
+(provide 'fuff)
+;;; fuff.el ends here
