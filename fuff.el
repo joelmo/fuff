@@ -82,7 +82,8 @@ Files will be listed recursively from DIR."
   (setq fuff-enable-ido-switch t)
   (let ((selected (ido-completing-read "Find file (fu): " (fuff-files dir))))
     (if (file-exists-p selected)
-	(ido-file-internal ido-default-file-method 'fuff-find-file selected)
+	(let ((default-directory selected))
+	  (command-execute 'find-file))
       (find-file (concat dir "/" selected)))))
 
 (defun fuff-ido-switch ()
