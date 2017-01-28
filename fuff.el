@@ -34,19 +34,15 @@
 
 (require 'seq)
 (require 'ido)
+(require 'grep)
 
 (defgroup fuff nil
-  "Switch between files using findutils find."
+  "Switch between files using findutils find.
+`grep-find-ignored-files' and `grep-find-ignored-directories' applies
+to fuff."
   :group 'convenience
   :group 'files
   :group 'project)
-
-(defcustom fuff-patterns '("*.adb" "*.c" "*.cpp" "*.cs" "*.el" "*.go"
-"*.html" "*.java" "*.js" "*.md" "*.nix" "*.org" "*.php" "*.pl" "*.py"
-"*.r" "*.rb" "*.rs" "*.sh" "*.sql" "*.txt")
-  "List of patterns to look for when using `fuff-find-file'.
-This is used by `fuff-query'."
-  :type '(repeat (string :tag "Pattern")))
 
 (defcustom fuff-start-directories '("~/Documents")
   "Indicators telling where `fuff-find-file' can be used.
@@ -65,14 +61,16 @@ Argument FILE is a file or directory above the starting point."
 
 (defun fuff-query ()
   "Turn `fuff-patterns' into a string that the find command can use."
-  (mapconcat (lambda (pat) (format "-name \"%s\"" pat))
-             fuff-patterns " -or "))
+  (mapconcat (apply-partially 'format "-name \"%s\"")
+	     (append grep-find-ignored-directories
+		     grep-find-ignored-files)
+	     " -or "))
 
 (defun fuff-files (dir)
   "Return a list of all filenames in DIR matching `fuff-patterns'."
   (split-string (shell-command-to-string
-		 (format "find %s -type f \\( %s \\) -printf '%%P\n'"
-			 dir (fuff-query)))))
+		 (format "find %s \\( %s \\) -prune -o -type f -printf '%%P\n'"
+			 dir (fuff-query))) "\n"))
 
 (defvar fuff-enable-ido-switch nil
   "If non-nil, enable `fuff-ido-switch' in ido.")
