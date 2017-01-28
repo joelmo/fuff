@@ -98,6 +98,8 @@ Files will be listed recursively from DIR."
     (remove-hook 'ido-make-file-list-hook 'fuff-ido-switch))
   (setq fuff-enable-ido-switch nil))
 
+(add-hook 'ido-setup-hook 'fuff-ido-setup)
+
 ;;;###autoload
 (defun fuff-find-file ()
   "This can be used as a replacement for `find-file'."
@@ -106,9 +108,6 @@ Files will be listed recursively from DIR."
     (if start-dir
 	  (fuff-internal start-dir)
       (command-execute 'find-file))))
-
-;;;###autoload
-(add-hook 'ido-setup-hook 'fuff-ido-setup)
 
 (provide 'fuff)
 ;;; fuff.el ends here
