@@ -5,6 +5,7 @@
 ;; Author: Joel Moberg
 ;; Git: https://github.com/joelmo/fuff.git
 ;; Version: 0.1
+;; Package-Requires: ((seq "2.3"))
 ;; Keywords: files, project, convenience
 
 ;; This file is NOT part of GNU Emacs.
