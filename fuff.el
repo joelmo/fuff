@@ -1,9 +1,9 @@
-;;; fuff.el --- Find files with findutils.
+;;; fuff.el --- Find files with findutils, recursively
 
 ;; Copyright (C) 2017  Joel Moberg
 
 ;; Author: Joel Moberg
-;; Git: https://github.com/joelmo/fuff.git
+;; URL: https://github.com/joelmo/fuff
 ;; Version: 0.1
 ;; Package-Requires: ((seq "2.3"))
 ;; Keywords: files, project, convenience
@@ -78,7 +78,6 @@ Argument FILE is a file or directory above the starting point."
 (defun fuff-internal (dir)
   "Internal command for `fuff-find-file'.
 Files will be listed recursively from DIR."
-  (setq fuff-enable-ido-switch t)
   (let ((selected (ido-completing-read "Find file (fu): " (fuff-files dir))))
     (if (file-exists-p selected)
 	(let ((default-directory selected))
@@ -92,7 +91,7 @@ Files will be listed recursively from DIR."
     	(fuff-internal dir))))
 
 (defun fuff-ido-setup ()
-  "Hook for ido, determines when to switch to fuff."
+  "Determine when to setup the ido switch hook."
   (if fuff-enable-ido-switch
       (add-hook 'ido-make-file-list-hook 'fuff-ido-switch)
     (remove-hook 'ido-make-file-list-hook 'fuff-ido-switch))
@@ -104,6 +103,7 @@ Files will be listed recursively from DIR."
 (defun fuff-find-file ()
   "This can be used as a replacement for `find-file'."
   (interactive)
+  (setq fuff-enable-ido-switch t)
   (let ((start-dir (fuff-start-directory default-directory)))
     (if start-dir
 	  (fuff-internal start-dir)
